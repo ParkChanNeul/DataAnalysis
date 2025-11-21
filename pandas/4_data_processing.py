@@ -142,4 +142,50 @@ def str_processing():
   print(split_df)
 
   print(split_df.str[0])  # 첫번째 요소(메인 이름)만 추출
+
+  print('* ---- * '*30)
+
+  # 구분자, 분리횟수, 컬럼확장 설정 분리
+  split_df = df['상품명'].str.split('(', n=1, expand=True)
+  # print(split_df)
+  # print(split_df.columns)
+
+  # print(split_df[0])  # 메인 이름
+  # print(split_df[1]) # 용량/부가 정보. 없는 데이터 None
+
+  # * df *
+  # '메인 이름' 컬럼을 추가, 구분한 첫번째 데이터를 저장 ( 양끝 공백 제거 )
+  # '용량' 컬럼을 추가, 구분한 두번째 데이터를 저장 ( ')'를 제거 )
+  df['메인 이름'] = split_df[0].str.strip()
+  df['용량'] = split_df[1].str.replace(')', '')
+
+  print('* ==== 메인이름, 용량 컬럼 추가 ==== *')
+  print(df.head())
+
+  print("* ==== 용량 데이터만 조회 ==== *")
+  print(df['용량'])
+  # 결측치 확인 : isnull()
+  #  -> 결측치 : 유효하지 않은 값 (수집x, ...)
+  #     * NaN   : Not a Number. 수치형 데이터에서 주로 다룸
+  #     * None  : Python 객체에서 "값이 없음"을 명시
+  #     * Nat   : Not a Time. 날짜/시간 데이터에서 사용
+
+  # print( df['용량'].isnull() )
+  # 유효한 값을 확인 => isnull()의 결과를 부정
+  #                     부정 연산자(~) 사용
+  # print( ~df['용량'].isnull() )
+
+  print(  df[~df['용량'].isnull()] )
+  # and 연산 ->  &
+  # or 연산  -> |
+  # not 연산 -> ~
+
+  # * 유효한 값이 있는지 확인 : notna()
+  #   - 유효한 값 (결측치 x) : True
+  #   - 결측치 (NaN, Null)  : False
+  print("* ==== notna() ==== *")
+  print(df['용량'].notna())
+
+  print(df[df['용량'].notna()])
+
 str_processing()
