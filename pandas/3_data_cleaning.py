@@ -47,7 +47,7 @@ def fillna_zero():
 
 def fillna_median():
     '''
-        결측치 데이터를 0으로 대체
+        결측치 데이터를 중앙값 대체
     '''
     # DataFrame 객체 생성
     # df = pd.DataFrame(data)
@@ -67,6 +67,10 @@ def fillna_median():
     print(df['age'])
 
 def dropna_score():
+    '''
+       score 컬럼에 결측치가 있으면 
+       해당 행을 제거
+    '''
     # * 결측치 제거 : df.dropna(subset=[컬럼])
     print(df['score'])
     return df.dropna(subset=['score'])
