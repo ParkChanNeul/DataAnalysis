@@ -1,5 +1,6 @@
 # pandas/6_data_analysis.py
 import pandas as pd
+import numpy as np
 
 # data.csv 파일을 읽어 df 변수에 저장
 df = pd.read_csv('data.csv')
@@ -60,6 +61,76 @@ print('* === 상품 카테고리 별 고객 평점의 중앙값 === *')
 print(rating_by_category.median())
 
 #     2) 결측치를 중앙값으로 변경
+
+def test_func(x):
+  print('* ---------- test_func ---------- *')
+  print(' * 현재 그룹 정보 :')
+  print(x)
+  print(f' * 그룹의 중앙값 : {x.median()}')
+  print(x.fillna(x.median()))
+  return x.fillna(x.median())
+  print('* ------------------------------- *')
+# print(df)
+# rating_by_category.transform(test_func)
+
 df['Customer_Rating'] = rating_by_category.transform(lambda x: x.fillna(x.median()))
 print(f' * 처리 후 고객 평점 결측치 개수 : {df["Customer_Rating"].isnull().sum()}')
 print(df["Customer_Rating"])
+
+# * 판매 금액 (Sales_Amount) 컬럼의 결측치를 지역(Region)별 판매금액 평균으로 변경
+df['Sales_Amount'] = df.groupby('Region')['Sales_Amount'].transform(lambda x: x.fillna(x.mean()))
+
+print('* ------ 고객 평점, 판매 금액 컬럼의 결측치 처리 ------ *')
+print(df[['Customer_Rating', 'Sales_Amount']].isnull().sum())
+
+# * 판매 수량(Units_Sold) 컬럼의 결측치를 전체 데이터의 최빈값으로 변경
+#   - 최빈값 : 가장 자주 나오는 값. mode()
+
+print(f'판매 수량의 최빈값 : {df["Units_Sold"].mode()[0]}')
+print(df["Units_Sold"].mode())
+# => 최빈값의 경우 여러 개의 데이터가 결과로 표시되어, 값 자체를 사용할 때 첫번째 데이터를 선택!
+
+# 판매 수량의 결측치를 최빈값으로 변경
+df['Units_Sold'] = df['Units_Sold'].fillna(df['Units_Sold'].mode()[0])
+
+print(f'판매 수량 컬럼의 결측치 개수 : {df["Units_Sold"].isnull().sum()}')
+# ====================================================================
+# * 이상치 (Oulier) 처리 *
+#   : 데이터의 대부분의 분포에서 벗어난 극단적인 값을 처리하는 과정
+#   : 상한선(Capping)을 설정하여 이상치를 찾아 대체
+
+# * 판매금액 컬럼의 95% 분위수를 초과하는 값을 이상치로 판단하여
+#   설정된 상한선의 값으로 대체
+
+# 95% 분위수 => quantile(q%)
+cap = df['Sales_Amount'].quantile(0.95)
+print(f'판매 금액 컬럼의 95% 분위수 : {cap}')
+
+# 판매 금액 데이터 중 상한선을 초과하는 값을 상한선 값으로 변경
+# np.where(조건, 조건에해당될때사용할값, 조건에해당되지않을때사용할값)
+print('* ---- 이상치 처리 전 ---- *')
+print(df['Sales_Amount'])
+
+df['Sales_Amount'] = np.where(df['Sales_Amount'] > cap, cap, df['Sales_Amount'])
+
+print('* ---- 이상치 처리 후 ---- *')
+print(df['Sales_Amount'])
+
+# -----------------------------------
+
+# * 컬럼 추가 : 기존 데이터를 활용하여 분석에 유의미한 새로운 변수 생성
+#               => 특성 공학 (Feature Engineering)
+
+
+# * 평균 판매 가격 계산 (Avg_Price)
+#   평균 판매 가격 = 판매 금액 / 판매 수량
+df['Avg_Price'] = df['Sales_Amount'] / df['Units_Sold']
+
+print(df)
+
+# * 매출 등급 생성 (Sales_Grade)
+#   판매 금액이 전체 판매금액 평균보다 높으면 'High', 그렇지 않으면 'Low' 등급 부여
+sales_mean = df['Sales_Amount'].mean() # 전체 판매금액 평균
+df['Sales_Grade'] = np.where(df['Sales_Amount'] >= sales_mean, 'High', 'Low')
+print(df)
+# * ======================= 전처리 완료 ======================= *
