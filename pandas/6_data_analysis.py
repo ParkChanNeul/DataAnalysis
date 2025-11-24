@@ -134,3 +134,54 @@ sales_mean = df['Sales_Amount'].mean() # 전체 판매금액 평균
 df['Sales_Grade'] = np.where(df['Sales_Amount'] >= sales_mean, 'High', 'Low')
 print(df)
 # * ======================= 전처리 완료 ======================= *
+
+# * 단순히 평균, 합계가 아닌 복합적인 통계 (그룹 별 비교, 정규화, 다차원 집계 등)를
+#   사용하여 데이터의 숨겨진 패턴이나 관계를 파악하는 과정 => 심층 분석
+
+# * 그룹별 복합 통계 *
+#   agg : 그룹화된 데이터에 대해 여러 개의 집계 함수를 한 번에 적용하여 요약 통계를 생성하는 함수
+#         groupby 결과에 대해 sum, mean, max, std 등 집계함수를 적용
+
+# 카테고리 별 판매 금액 컬럼에 대한 다양한 요약 통계 
+# - 총합, 평균, 최대값, 표준편차
+
+category_stat = df.groupby('Product_Category')['Sales_Amount'].agg(
+  Total_Sales='sum',
+  Mean_Sales='mean',
+  Max_Sales='max',
+  Std_Sales='std'
+).round(2)
+# df.round(소수점_자리) : 해당 소숫점자리까지 반올림
+
+# print(type(category_stat))
+print(category_stat)
+
+# * 그룹 내 비교 분석 *
+#   transform : 그룹화된 데이터를 이용하되, 그 결과를 원래 데이터프레임 크기에 맞게 변환하여 새로운 컬럼을 생성
+#               그룹 내 정규화나 그룹별 평균 대치 등에 활용
+
+# * 지역 별 고객 평점 평균을 기준으로 개별 평점 차이  (Rating_Diff)
+# * 지역별 고객 평점 평균
+print( df.groupby('Region')['Customer_Rating'].agg('mean') )
+
+#   개별 평점 - 지역 별 고객 평점 평균 => + / -
+df['Rating_Diff'] = df.groupby('Region')['Customer_Rating'].transform(lambda x: x-x.mean()).round(2)
+
+# 지역, 고객평점, 평균대비 평점 차이 출력
+print( df[['Region', 'Customer_Rating', 'Rating_Diff']] )
+
+
+# * 피벗 테이블
+#   pivot_table(df, index=행분류기준컬럼, columns=열분류기준컬럼, values=집계대상값, aggfunc=적용할집계함수)
+
+# - 카테고리 별 평균 금액 조회
+pivot_ctg_mean = pd.pivot_table(df
+               , index='Product_Category'
+               , values='Sales_Amount'
+               , aggfunc='mean')
+
+print('* 카테고리 별 평균 금액 *')
+print(pivot_ctg_mean)
+print()
+
+# - 카테고리별 프로모션 사용 여부에 대한 평균 금액 조회
